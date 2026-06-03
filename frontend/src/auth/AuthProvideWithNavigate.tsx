@@ -1,6 +1,7 @@
 import { Auth0Provider } from "@auth0/auth0-react"
 import type { AppState } from "@auth0/auth0-react"
 import { useNavigate } from "react-router-dom"
+import AuthUserSync from "./AuthUserSync"
 
 type Props = {
   children: React.ReactNode
@@ -15,7 +16,7 @@ export default function Auth0ProviderWithNavigate({ children }: Props) {
   const audience = import.meta.env.VITE_AUTH0_AUDIENCE
 
   const onRedirectCallback = (appState?: AppState) => {
-    navigate("/auth-callback", { state: appState })
+    navigate(appState?.returnTo ?? "/inicio_cliente", { replace: true })
   }
 
   return (
@@ -29,6 +30,7 @@ export default function Auth0ProviderWithNavigate({ children }: Props) {
       }}
       onRedirectCallback={onRedirectCallback}
     >
+      <AuthUserSync />
       {children}
     </Auth0Provider>
   )
