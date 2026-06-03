@@ -1,22 +1,13 @@
 import { useAuth0 } from "@auth0/auth0-react"
 import { Link } from "react-router-dom"
+import { Button } from "./ui/button"
 import UserNameMenu from "./UserNameMenu"
 
 export default function MainNav() {
   const { loginWithRedirect, isAuthenticated } = useAuth0()
 
-  const handleLogin = async () => {
-    try {
-      await loginWithRedirect({
-        appState: { returnTo: "/inicio_cliente" },
-      })
-    } catch (error) {
-      console.error("Error iniciando sesion con Auth0", error)
-    }
-  }
-
   return (
-    <span className="flex items-center gap-4">
+    <span className="flex items-center space-x-2">
       {isAuthenticated ? (
         <>
           <Link
@@ -34,15 +25,17 @@ export default function MainNav() {
           <UserNameMenu />
         </>
       ) : (
-        <button
-          type="button"
-          className="rounded-full border border-[#FDF1E2] px-4 py-2 font-bold text-[#FDF1E2] transition hover:bg-[#FDF1E2] hover:text-[#655A7C]"
-          onClick={() => {
-            void handleLogin()
-          }}
+        <Button
+          variant="ghost"
+          className="font-bold text-[#FDF1E2] hover:bg-[#FDF1E2] hover:text-[#655A7C]"
+          onClick={async () =>
+            await loginWithRedirect({
+              appState: { returnTo: "/inicio_cliente" },
+            })
+          }
         >
           Ingresar
-        </button>
+        </Button>
       )}
     </span>
   )
