@@ -1,22 +1,38 @@
 import { useAuth0 } from "@auth0/auth0-react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import UserNameMenu from "./UserNameMenu"
 
 export default function MainNav() {
   const { loginWithRedirect, isAuthenticated } = useAuth0()
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const [loginError, setLoginError] = useState("")
 
   const handleLogin = async () => {
-    await loginWithRedirect({
-      appState: { returnTo: "/inicio_cliente" },
-      authorizationParams: {
-        redirect_uri: import.meta.env.VITE_AUTH0_CALLBACK_URL,
-        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-        scope: "openid profile email",
-      },
-      openUrl: (url) => {
-        window.location.assign(url)
-      },
-    })
+    setLoginError("")
+    setIsRedirecting(true)
+
+    try {
+      await loginWithRedirect({
+        appState: { returnTo: "/inicio_cliente" },
+        authorizationParams: {
+          redirect_uri: import.meta.env.VITE_AUTH0_CALLBACK_URL,
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+          scope: "openid profile email",
+        },
+        openUrl: (url) => {
+          window.location.href = url
+        },
+      })
+    } catch (error) {
+      console.error("Error iniciando sesion con Auth0", error)
+      setIsRedirecting(false)
+      setLoginError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo iniciar sesion con Auth0"
+      )
+    }
   }
 
   return (
@@ -45,9 +61,14 @@ export default function MainNav() {
             void handleLogin()
           }}
         >
-          Ingresar
+          {isRedirecting ? "Redirigiendo..." : "Ingresar"}
         </button>
       )}
+      {loginError ? (
+        <span className="max-w-64 text-sm font-semibold text-red-200">
+          {loginError}
+        </span>
+      ) : null}
     </span>
   )
 }
