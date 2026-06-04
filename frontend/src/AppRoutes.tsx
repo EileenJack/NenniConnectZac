@@ -3,6 +3,7 @@ import Layout from "./layout/Layout"
 import ProtectedRoute from "./auth/ProtectedRoute"
 import AuthCallBackPage from "@/pages/AuthCallBackPage"
 import HomePage from "@/pages/HomePage"
+import AdministrarPerfilPage from "@/pages/AdministrarPerfilPage"
 import ManageNegocioPage from "@/pages/ManageNegocioPage"
 import NegocioDetailPage from "@/pages/NegocioDetailPage"
 
@@ -11,9 +12,10 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/auth-callback" element={<AuthCallBackPage />} />
-      <Route path="/negocios/:id" element={<NegocioDetailPage />} />
 
       <Route element={<ProtectedRoute />}>
+        <Route path="/administrar" element={<AdministrarPerfilPage />} />
+        <Route path="/negocios/:id" element={<NegocioDetailPage />} />
         <Route
           path="/inicio_cliente"
           element={<Layout>Bienvenido, que deseas buscar?</Layout>}

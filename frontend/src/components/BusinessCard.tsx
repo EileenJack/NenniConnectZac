@@ -1,8 +1,10 @@
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import type { Negocio } from "@/api/NegocioApi"
+import { useRegisteredUser } from "@/context/RegisteredUserContext"
 import { Link } from "react-router-dom"
 
 export default function BusinessCard({ negocio }: { negocio: Negocio }) {
+  const { isLoggedIn, dbUser } = useRegisteredUser()
   return (
     <article className="flex flex-col overflow-hidden rounded-lg bg-white shadow-md">
       <AspectRatio ratio={16 / 9}>
@@ -39,12 +41,14 @@ export default function BusinessCard({ negocio }: { negocio: Negocio }) {
           <p className="text-sm text-gray-600">Desde ${negocio.precioMinimo}</p>
         )}
 
-        <Link
-          to={`/negocios/${negocio._id}`}
-          className="mt-auto rounded-md bg-[#655A7C] px-4 py-2 text-center font-bold text-[#FDF1E2] hover:bg-[#AB92BF]"
-        >
-          Ver detalle
-        </Link>
+        {isLoggedIn && dbUser?.rol === "cliente" && (
+          <Link
+            to={`/negocios/${negocio._id}`}
+            className="mt-auto rounded-md bg-[#655A7C] px-4 py-2 text-center font-bold text-[#FDF1E2] hover:bg-[#AB92BF]"
+          >
+            Ver detalle
+          </Link>
+        )}
       </div>
     </article>
   )

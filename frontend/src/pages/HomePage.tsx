@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from "react"
+import { useLocation } from "react-router-dom"
+import { useRegisteredUser } from "@/context/RegisteredUserContext"
 import Layout from "../layout/Layout"
 import { getAllNegocios, type Negocio } from "../api/NegocioApi"
 import BusinessCard from "../components/BusinessCard"
 import FiltersBar from "../components/FiltersBar"
 
 export default function HomePage() {
+  const location = useLocation()
+  const { authError: contextAuthError, clearAuthError } = useRegisteredUser()
+  const routeAuthError = (location.state as { authError?: string } | null)
+    ?.authError
+  const authError = routeAuthError ?? contextAuthError
+
+  useEffect(() => {
+    if (routeAuthError) {
+      clearAuthError()
+    }
+  }, [routeAuthError, clearAuthError])
   const [negocios, setNegocios] = useState<Negocio[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -49,6 +62,15 @@ export default function HomePage() {
           Encuentra negocios, servicios y emprendedores de Zacatecas.
         </p>
       </section>
+
+      {authError && (
+        <p
+          role="alert"
+          className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center text-amber-900"
+        >
+          {authError}
+        </p>
+      )}
 
       <FiltersBar filters={filters} setFilters={setFilters} />
 

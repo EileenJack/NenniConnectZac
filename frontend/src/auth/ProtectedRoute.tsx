@@ -1,12 +1,12 @@
-import { useAuth0 } from "@auth0/auth0-react"
+import { useRegisteredUser } from "@/context/RegisteredUserContext"
 import { Navigate, Outlet } from "react-router-dom"
 
 export default function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth0()
+  const { isLoggedIn, isDbUserLoading } = useRegisteredUser()
 
-  if (isLoading) {
+  if (isDbUserLoading) {
     return null
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />
+  return isLoggedIn ? <Outlet /> : <Navigate to="/" replace />
 }

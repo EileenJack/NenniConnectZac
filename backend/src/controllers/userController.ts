@@ -7,13 +7,13 @@ const hashPassword = (password: string, salt = crypto.randomBytes(16).toString("
   hash: crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex"),
 });
 
-// Crear o verificar usuario en Atlas
+// Vincular Auth0 con usuario previamente registrado en MongoDB
 export const createUser = async (req: Request, res: Response) => {
   const auth0Id = (req.auth as any)?.payload?.sub as string | undefined;
   const { email, name } = req.body as { email?: string; name?: string };
 
-  if (!auth0Id || !email || !name) {
-    res.status(400).json({ message: "Faltan datos para crear usuario" });
+  if (!auth0Id || !email) {
+    res.status(400).json({ message: "Faltan datos para verificar usuario" });
     return;
   }
 
@@ -21,13 +21,83 @@ export const createUser = async (req: Request, res: Response) => {
     let user = await User.findOne({ auth0Id });
 
     if (!user) {
-      user = await User.create({ auth0Id, email, name, rol: "cliente" });
+      user = await User.findOne({ email: email.toLowerCase() });
+    }
+
+    if (!user) {
+      res.status(404).json({
+        message: "Usuario no registrado en el sistema. Contacta al administrador.",
+      });
+      return;
+    }
+
+    if (user.bloqueado) {
+      res.status(403).json({ message: "Usuario bloqueado" });
+      return;
+    }
+
+    if (!user.auth0Id) {
+      user.auth0Id = auth0Id;
+      if (name && !user.name) user.name = name;
+      await user.save();
     }
 
     res.status(200).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creando/verificando usuario" });
+    res.status(500).json({ message: "Error verificando usuario" });
+  }
+};
+
+export const registerAuth0User = async (req: Request, res: Response) => {
+  const auth0Id = (req.auth as any)?.payload?.sub as string | undefined;
+  const tokenEmail = (req.auth as any)?.payload?.email as string | undefined;
+  const { email, name, usuario, rol = "cliente" } = req.body as {
+    email?: string;
+    name?: string;
+    usuario?: string;
+    rol?: "cliente" | "emprendedor" | "admin";
+  };
+
+  if (!auth0Id || !email || !name || !usuario) {
+    res.status(400).json({
+      message: "Faltan campos obligatorios",
+      campos: ["email", "name", "usuario"],
+    });
+    return;
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (tokenEmail && tokenEmail.toLowerCase() !== normalizedEmail) {
+    res.status(403).json({
+      message: "El correo debe coincidir con tu cuenta de Auth0",
+    });
+    return;
+  }
+
+  try {
+    const existing = await User.findOne({
+      $or: [{ email: normalizedEmail }, { auth0Id }, { usuario: usuario.trim() }],
+    });
+
+    if (existing) {
+      res.status(409).json({ message: "El usuario o correo ya esta registrado" });
+      return;
+    }
+
+    const user = await User.create({
+      auth0Id,
+      email: normalizedEmail,
+      name: name.trim(),
+      usuario: usuario.trim(),
+      rol,
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error registrando usuario" });
   }
 };
 
